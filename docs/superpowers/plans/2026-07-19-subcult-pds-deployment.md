@@ -13,6 +13,8 @@
 
 **Tech Stack:** Docker Compose, official Bluesky PDS container, Bash operator scripts, Caddy, SQLite and disk blob storage.
 
+**Execution status:** Completed on 2026-07-19. Runtime and recovery evidence is recorded in `docs/DEPLOYMENT_EVIDENCE.md`.
+
 ---
 
 ## File map
@@ -32,46 +34,46 @@
 
 ### Task 1: Runtime contract
 
-- [ ] Create `compose.yaml` using `ghcr.io/bluesky-social/pds:0.4` pinned by digest, `10.0.0.56:3043:3000`, `/srv/data/subcult-pds:/pds`, and `/srv/data/subcult-pds/pds.env`.
-- [ ] Add a localhost container health check for `/xrpc/_health`.
-- [ ] Create `.env.example` with the image, bind address, port, data directory, backup directory, and public hostname.
-- [ ] Run `docker compose config --quiet`; expect exit status 0.
+- [x] Create `compose.yaml` using `ghcr.io/bluesky-social/pds:0.4` pinned by digest, `10.0.0.56:3043:3000`, `/srv/data/subcult-pds:/pds`, and `/srv/data/subcult-pds/pds.env`.
+- [x] Add a localhost container health check for `/xrpc/_health`.
+- [x] Create `.env.example` with the image, bind address, port, data directory, backup directory, and public hostname.
+- [x] Run `docker compose config --quiet`; expect exit status 0.
 
 ### Task 2: Safe initialization
 
-- [ ] Create `scripts/init.sh` with `set -Eeuo pipefail`, dependency checks, restrictive umask, and refusal to overwrite an existing `pds.env`.
-- [ ] Generate `PDS_JWT_SECRET` and `PDS_ADMIN_PASSWORD` with `openssl rand --hex 16`.
-- [ ] Generate `PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX` with the official secp256k1 installer command.
-- [ ] Configure `PDS_HOSTNAME=pds.subcult.tv`, `PDS_SERVICE_HANDLE_DOMAINS=.subcult.tv`, rate limits, invites, PLC, AppView, reporting, and crawler endpoints.
-- [ ] Leave SMTP unset and record that password recovery is unavailable until SMTP is configured.
+- [x] Create `scripts/init.sh` with `set -Eeuo pipefail`, dependency checks, restrictive umask, and refusal to overwrite an existing `pds.env`.
+- [x] Generate `PDS_JWT_SECRET` and `PDS_ADMIN_PASSWORD` with `openssl rand --hex 16`.
+- [x] Generate `PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX` with the official secp256k1 installer command.
+- [x] Configure `PDS_HOSTNAME=pds.subcult.tv`, `PDS_SERVICE_HANDLE_DOMAINS=.subcult.tv`, rate limits, invites, PLC, AppView, reporting, and crawler endpoints.
+- [x] Leave SMTP unset and record that password recovery is unavailable until SMTP is configured.
 
 ### Task 3: Edge routing
 
-- [ ] Create `deploy/caddy/subcult-pds.Caddyfile` with an exact `pds.subcult.tv` proxy to `10.0.0.56:3043`.
-- [ ] Add a wildcard `*.subcult.tv` route that proxies only `/.well-known/atproto-did`; return 404 for all other unmatched wildcard requests.
-- [ ] Add the site import to Almaz Caddy only after saving a timestamped backup.
-- [ ] Run `caddy validate` before reload; expect `Valid configuration`.
-- [ ] Confirm existing named project hosts still return their existing content after reload.
+- [x] Create `deploy/caddy/subcult-pds.Caddyfile` with an exact `pds.subcult.tv` proxy to `10.0.0.56:3043`.
+- [x] Add a wildcard `*.subcult.tv` route that proxies only `/.well-known/atproto-did`; return 404 for all other unmatched wildcard requests.
+- [x] Add the site import to Almaz Caddy only after saving a timestamped backup.
+- [x] Run `caddy validate` before reload; expect `Valid configuration`.
+- [x] Confirm existing named project hosts still return their existing content after reload.
 
 ### Task 4: Operations tooling
 
-- [ ] Create backup and restore scripts that stop the PDS before copying SQLite/WAL data.
-- [ ] Create invite and interactive account-administration wrappers that read secrets internally and never print the admin password.
-- [ ] Document the reserved-handle constraint: labels already used by Subcult services must not be issued as user handles.
-- [ ] Document manual digest upgrades and prohibit Watchtower for identity infrastructure.
+- [x] Create backup and restore scripts that stop the PDS before copying SQLite/WAL data.
+- [x] Create invite and interactive account-administration wrappers that read secrets internally and never print the admin password.
+- [x] Document the reserved-handle constraint: labels already used by Subcult services must not be issued as user handles.
+- [x] Document manual digest upgrades and prohibit Watchtower for identity infrastructure.
 
 ### Task 5: Deployment validation
 
-- [ ] Pull the pinned image and verify its resolved repo digest.
-- [ ] Run preflight and initialize protected storage.
-- [ ] Start the PDS and wait for Docker health.
-- [ ] Verify `https://pds.subcult.tv/xrpc/_health` returns PDS JSON, not an empty proxy response.
-- [ ] Verify `com.atproto.server.describeServer` reports `.subcult.tv` and invite-only mode.
-- [ ] Verify a WebSocket upgrade reaches `com.atproto.sync.subscribeRepos`.
-- [ ] Verify representative existing project hosts still return 200.
+- [x] Pull the pinned image and verify its resolved repo digest.
+- [x] Run preflight and initialize protected storage.
+- [x] Start the PDS and wait for Docker health.
+- [x] Verify `https://pds.subcult.tv/xrpc/_health` returns PDS JSON, not an empty proxy response.
+- [x] Verify `com.atproto.server.describeServer` reports `.subcult.tv` and invite-only mode.
+- [x] Verify a WebSocket upgrade reaches `com.atproto.sync.subscribeRepos`.
+- [x] Verify representative existing project hosts still return 200.
 
 ### Task 6: Recovery evidence
 
-- [ ] Produce an initial stopped-service backup with SHA-256 sidecar.
-- [ ] Verify the archive contains `pds.env`, the PLC rotation key material or configured key, databases, and blob directory as applicable.
-- [ ] Record restore and secret-compromise procedures in `docs/OPERATIONS.md`.
+- [x] Produce an initial stopped-service backup with SHA-256 sidecar.
+- [x] Verify the archive contains `pds.env`, the PLC rotation key material or configured key, databases, and blob directory as applicable.
+- [x] Record restore and secret-compromise procedures in `docs/OPERATIONS.md`.
