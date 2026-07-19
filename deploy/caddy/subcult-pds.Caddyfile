@@ -1,4 +1,7 @@
 http://pds.subcult.tv {
+  @createAccount path /xrpc/com.atproto.server.createAccount
+  respond @createAccount "" 404
+
   reverse_proxy 10.0.0.56:3043
 }
 
