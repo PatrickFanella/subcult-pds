@@ -1,0 +1,6 @@
+/.env
+/pds.env
+/backup/
+/backups/
+/tmp/
+/data/

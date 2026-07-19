@@ -1,0 +1,14 @@
+http://pds.subcult.tv {
+  reverse_proxy 10.0.0.56:3043
+}
+
+http://*.subcult.tv {
+  @did path /.well-known/atproto-did
+  handle @did {
+    reverse_proxy 10.0.0.56:3043
+  }
+
+  handle {
+    respond "not found" 404
+  }
+}

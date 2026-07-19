@@ -1,0 +1,21 @@
+services:
+  pds:
+    image: ghcr.io/bluesky-social/pds:0.4@sha256:1fa8bbceabb65d8e1710749b1ea92c1c20a7489ca38da4a0a5f64c0c10a70c29
+    container_name: subcult-pds
+    restart: unless-stopped
+    env_file:
+      - path: ${PDS_DATA_DIR:-/srv/data/subcult-pds}/pds.env
+        required: true
+    ports:
+      - "${PDS_BIND_ADDR:-10.0.0.56}:${PDS_PORT:-3043}:3000"
+    volumes:
+      - ${PDS_DATA_DIR:-/srv/data/subcult-pds}:/pds
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          node -e "fetch('http://127.0.0.1:3000/xrpc/_health').then(r=>{if(!r.ok) process.exit(1)})"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
