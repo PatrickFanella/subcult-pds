@@ -15,6 +15,15 @@ Do not distribute reusable invite codes until signup policy enforces that reserv
 - The exact `pds.subcult.tv` route proxies all PDS traffic except public account creation, which Caddy deliberately answers with a minimal 404 at `/xrpc/com.atproto.server.createAccount` before the reverse proxy. All other PDS endpoints remain proxied, and the wildcard route still proxies only `/.well-known/atproto-did`; existing and future applications require exact-host Caddy routes, which are more specific than the wildcard.
 - SMTP is intentionally unset; password recovery is unavailable until configured.
 
+## OAuth same-site hotfix
+
+- Root cause: the official PDS `0.4.5009` image ships `@atproto/oauth-provider@0.19.5`, which rejects `'same-site'` in `validateFetchSite(...)` and breaks OAuth between `patchwork.subcult.tv` and `pds.subcult.tv`.
+- The exact fix from upstream ATProto commit `af02ea14e710f5930d78b49836aa460cfe168941`, released in `@atproto/oauth-provider@0.19.6`, is carried here as a minimal derived image in `Dockerfile.oauth-samesite`.
+- Build from the pinned base image, run `scripts/test-oauth-image.sh`, then push the verified image to the local registry at `10.0.0.56:5000` by digest.
+- Pin the pushed digest via the host `.env` after review; do not edit `compose.yaml` yet.
+- Keep the prior digest for rollback until the new image is validated.
+- Remove this hotfix once the official PDS distro ships `oauth-provider >= 0.19.6`.
+
 ## Backups
 
 - `scripts/backup.sh` only stops/restarts PDS if it was already running.
