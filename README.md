@@ -53,3 +53,7 @@ Backups use a running-state check before stopping PDS and always write a checksu
 Restores require `--yes`, a checksum sidecar, and reject absolute or traversal archive entries before extraction.
 
 Smoke validation checks HTTP success, JSON validity, `inviteCodeRequired === true`, and WebSocket connectivity unless `SKIP_WEBSOCKET_CHECK=1`.
+
+## License
+
+Licensed under `GPL-3.0-or-later`. See [LICENSE](LICENSE).
