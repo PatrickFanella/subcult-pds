@@ -24,12 +24,28 @@ const req = async (path, opts={}) => {
   if (!h.r.ok) throw new Error('health not ok');
   const health = JSON.parse(h.text);
   if (!health || typeof health.version !== 'string' || !health.version) throw new Error('health version missing');
+  const expectedVersion = process.env.PDS_EXPECTED_VERSION;
+  if (expectedVersion && health.version !== expectedVersion) throw new Error(`unexpected health version: ${health.version}`);
   const d = await req('/xrpc/com.atproto.server.describeServer');
   const j = JSON.parse(d.text);
   if (!j || typeof j !== 'object') throw new Error('invalid describeServer JSON');
+  if (j.did !== 'did:web:pds.subcult.tv') throw new Error(`unexpected server DID: ${j.did}`);
   if (!String(j.availableUserDomains || '').includes('.subcult.tv')) throw new Error('missing .subcult.tv');
   if (j.inviteCodeRequired !== true) throw new Error('invite requirement missing');
   if (d.r.status < 200 || d.r.status >= 300) throw new Error('describeServer not successful');
+  const create = await req('/xrpc/com.atproto.server.createAccount', {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: '{}',
+  });
+  if (create.r.status !== 404) throw new Error(`public account creation boundary returned ${create.r.status}`);
+  if (create.text !== '') throw new Error('public account creation boundary returned a non-empty body');
+  const testHandle = process.env.PDS_TEST_HANDLE;
+  if (testHandle) {
+    const wellKnown = await fetch(`https://${testHandle}/.well-known/atproto-did`);
+    const did = (await wellKnown.text()).trim();
+    if (!wellKnown.ok || !did.startsWith('did:')) throw new Error(`wildcard handle resolution failed for ${testHandle}`);
+  }
   if (!skipWs) {
     const wsUrl = base.replace(/^http/, 'ws') + '/xrpc/com.atproto.sync.subscribeRepos';
     const ws = new WebSocket(wsUrl);

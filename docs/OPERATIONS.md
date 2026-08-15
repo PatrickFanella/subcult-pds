@@ -15,14 +15,11 @@ Do not distribute reusable invite codes until signup policy enforces that reserv
 - The exact `pds.subcult.tv` route proxies all PDS traffic except public account creation, which Caddy deliberately answers with a minimal 404 at `/xrpc/com.atproto.server.createAccount` before the reverse proxy. All other PDS endpoints remain proxied, and the wildcard route still proxies only `/.well-known/atproto-did`; existing and future applications require exact-host Caddy routes, which are more specific than the wildcard.
 - SMTP is intentionally unset; password recovery is unavailable until configured.
 
-## OAuth same-site hotfix
+## Retired OAuth same-site hotfix
 
-- Root cause: the official PDS `0.4.5009` image ships `@atproto/oauth-provider@0.19.5`, which rejects `'same-site'` in `validateFetchSite(...)` and breaks OAuth between `patchwork.subcult.tv` and `pds.subcult.tv`.
-- The exact fix from upstream ATProto commit `af02ea14e710f5930d78b49836aa460cfe168941`, released in `@atproto/oauth-provider@0.19.6`, is carried here as a minimal derived image in `Dockerfile.oauth-samesite`.
-- Build from the pinned base image, run `scripts/test-oauth-image.sh`, then push the verified image to the local registry at `10.0.0.56:5000` by digest.
-- Pin the pushed digest via the host `.env` after review; do not edit `compose.yaml` yet.
-- Keep the prior digest for rollback until the new image is validated.
-- Remove this hotfix once the official PDS distro ships `oauth-provider >= 0.19.6`.
+- Official PDS `0.4.5027` ships `@atproto/oauth-provider@0.22.1` and replaces the former derived-image fix for upstream ATProto commit `af02ea14e710f5930d78b49836aa460cfe168941`.
+- The derived Dockerfile, patch script, and patch-specific test were removed only after production OAuth, same-site, callback, and record-round-trip qualification succeeded.
+- The retired image ID, local-registry digest, prior official base digest, and stopped-service backup remain recorded in `docs/DEPLOYMENT_EVIDENCE.md` as the upgrade rollback boundary.
 
 ## Backups
 
@@ -52,5 +49,21 @@ Do not distribute reusable invite codes until signup policy enforces that reserv
 
 ## Upgrades
 
-- Update the image digest manually.
-- Run compose config validation and smoke-test before release.
+- Pin the reviewed multi-architecture image index digest, not a floating tag or a platform-specific child manifest.
+- Before stopping the service, verify that the configured backup directory exists or can be created on the intended filesystem, has sufficient free space, and contains any rollback backup that must be retained.
+- Run `scripts/backup.sh`; it takes the archive while the service is stopped and restores the prior running state before returning. Immediately verify the returned archive with `sha256sum -c`, then record the archive and sidecar paths.
+- Retain the currently running immutable image ID and the verified backup as the rollback boundary.
+- Pull the candidate and run compose config validation before recreating the service.
+- After restart, run `PDS_EXPECTED_VERSION=0.4.5027 scripts/smoke-test.sh` and verify all of the following before declaring success:
+  - `_health` returns HTTP 200 and the expected version.
+  - `describeServer` returns `did:web:pds.subcult.tv`, `.subcult.tv`, and invite-required registration.
+  - `com.atproto.sync.subscribeRepos` accepts a WebSocket upgrade.
+  - a known wildcard handle resolves through `/.well-known/atproto-did`.
+  - the public `com.atproto.server.createAccount` boundary remains a minimal 404.
+  - Patchwork completes OAuth PAR, authorization-page navigation, and callback.
+  - a real test record can be written and read back through Patchwork.
+  - authorization-page navigation with `Sec-Fetch-Site: same-site` succeeds without request-header rewriting.
+  - account administration still works through `scripts/admin.sh`.
+- If any required check fails, restore the prior image pin; restore the verified stopped-service backup only if the candidate changed persistent state incompatibly.
+- Update `docs/DEPLOYMENT_EVIDENCE.md` with the deployed digest, backup and checksum, validation results, and rollback point only after every production check succeeds. Retire any temporary patch artifacts at that same post-qualification boundary.
+- This is independent PDS maintenance. Jetstream is downstream infrastructure and requires no PDS endpoint, archive, API-key, crawler, or data-directory change.
