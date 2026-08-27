@@ -42,3 +42,7 @@ Restores require `--yes`, a checksum sidecar, and reject absolute or traversal a
 
 Smoke validation checks health and optional expected version, the server identity and invite policy, the public account-creation 404 boundary, and WebSocket connectivity unless `SKIP_WEBSOCKET_CHECK=1`.
 Set `PDS_TEST_HANDLE` to a known existing handle to include wildcard resolution.
+
+## License
+
+Licensed under `GPL-3.0-or-later`. See [LICENSE](LICENSE).
